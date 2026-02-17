@@ -59,7 +59,7 @@ func ScanHandler(checkFunc func(data []byte, filename string) (int, interface{})
 				json.NewEncoder(w).Encode(map[string]string{"message": "Provide a single file"}) //nolint:errcheck
 				return
 			}
-			defer file.Close()
+			defer func() { _ = file.Close() }()
 
 			data, err = io.ReadAll(file)
 			if err != nil {

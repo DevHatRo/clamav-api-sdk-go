@@ -27,7 +27,7 @@ func TestNewClient(t *testing.T) {
 		if client == nil {
 			t.Fatal("client should not be nil")
 		}
-		client.Close()
+		_ = client.Close()
 	})
 
 	t.Run("trailing slash stripped", func(t *testing.T) {
@@ -38,7 +38,7 @@ func TestNewClient(t *testing.T) {
 		if client.baseURL != "http://localhost:6000" {
 			t.Errorf("baseURL = %q, want %q", client.baseURL, "http://localhost:6000")
 		}
-		client.Close()
+		_ = client.Close()
 	})
 
 	t.Run("missing scheme", func(t *testing.T) {
@@ -67,7 +67,7 @@ func TestNewClient(t *testing.T) {
 		if client.httpClient != hc {
 			t.Error("custom HTTP client not set")
 		}
-		client.Close()
+		_ = client.Close()
 	})
 
 	t.Run("with timeout", func(t *testing.T) {
@@ -78,7 +78,7 @@ func TestNewClient(t *testing.T) {
 		if client.timeout != 10*time.Second {
 			t.Errorf("timeout = %v, want %v", client.timeout, 10*time.Second)
 		}
-		client.Close()
+		_ = client.Close()
 	})
 
 	t.Run("with headers", func(t *testing.T) {
@@ -90,7 +90,7 @@ func TestNewClient(t *testing.T) {
 		if client.headers["X-Custom"] != "value" {
 			t.Error("custom headers not set")
 		}
-		client.Close()
+		_ = client.Close()
 	})
 }
 
@@ -104,7 +104,7 @@ func TestHealthCheck(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.HealthCheck(context.Background())
 		if err != nil {
@@ -125,7 +125,7 @@ func TestHealthCheck(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.HealthCheck(context.Background())
 		if err != nil {
@@ -141,7 +141,7 @@ func TestHealthCheck(t *testing.T) {
 
 	t.Run("connection error", func(t *testing.T) {
 		client, _ := NewClient("http://127.0.0.1:1")
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.HealthCheck(context.Background())
 		if err == nil {
@@ -159,7 +159,7 @@ func TestHealthCheck(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
@@ -188,7 +188,7 @@ func TestVersion(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.Version(context.Background())
 		if err != nil {
@@ -214,7 +214,7 @@ func TestVersion(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.Version(context.Background())
 		if err == nil {
@@ -238,7 +238,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.ScanFile(context.Background(), []byte("clean content"), "clean.txt")
 		if err != nil {
@@ -261,7 +261,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.ScanFile(context.Background(), []byte("X5O!P%@AP"), "eicar.txt")
 		if err != nil {
@@ -284,7 +284,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanFile(context.Background(), []byte("data"), "test.txt")
 		if err == nil {
@@ -304,7 +304,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanFile(context.Background(), []byte("data"), "test.txt")
 		if err == nil {
@@ -325,7 +325,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanFile(context.Background(), []byte("data"), "test.txt")
 		if err == nil {
@@ -346,7 +346,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanFile(context.Background(), []byte("data"), "test.txt")
 		if err == nil {
@@ -368,7 +368,7 @@ func TestScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanFile(context.Background(), []byte("data"), "")
 		if err != nil {
@@ -392,7 +392,7 @@ func TestScanFilePath(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.ScanFilePath(context.Background(), "testdata/clean.txt")
 		if err != nil {
@@ -405,7 +405,7 @@ func TestScanFilePath(t *testing.T) {
 
 	t.Run("file not found", func(t *testing.T) {
 		client, _ := NewClient("http://localhost:6000")
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanFilePath(context.Background(), "testdata/nonexistent.txt")
 		if err == nil {
@@ -429,7 +429,7 @@ func TestScanReader(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		reader := strings.NewReader("some file content")
 		result, err := client.ScanReader(context.Background(), reader, "test.txt")
@@ -452,7 +452,7 @@ func TestScanReader(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.ScanReader(context.Background(), strings.NewReader("data"), "myfile.pdf")
 		if err != nil {
@@ -476,7 +476,7 @@ func TestStreamScan(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		data := []byte("clean content")
 		result, err := client.StreamScan(context.Background(), bytes.NewReader(data), int64(len(data)))
@@ -497,7 +497,7 @@ func TestStreamScan(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		data := []byte("eicar data")
 		result, err := client.StreamScan(context.Background(), bytes.NewReader(data), int64(len(data)))
@@ -511,7 +511,7 @@ func TestStreamScan(t *testing.T) {
 
 	t.Run("zero size", func(t *testing.T) {
 		client, _ := NewClient("http://localhost:6000")
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.StreamScan(context.Background(), strings.NewReader(""), 0)
 		if err == nil {
@@ -524,7 +524,7 @@ func TestStreamScan(t *testing.T) {
 
 	t.Run("negative size", func(t *testing.T) {
 		client, _ := NewClient("http://localhost:6000")
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.StreamScan(context.Background(), strings.NewReader("data"), -1)
 		if err == nil {
@@ -544,7 +544,7 @@ func TestStreamScan(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.StreamScan(context.Background(), strings.NewReader("data"), 4)
 		if err == nil {
@@ -568,7 +568,7 @@ func TestStreamScanFile(t *testing.T) {
 		defer srv.Close()
 
 		client, _ := NewClient(srv.URL)
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		result, err := client.StreamScanFile(context.Background(), "testdata/clean.txt")
 		if err != nil {
@@ -581,7 +581,7 @@ func TestStreamScanFile(t *testing.T) {
 
 	t.Run("file not found", func(t *testing.T) {
 		client, _ := NewClient("http://localhost:6000")
-		defer client.Close()
+		defer func() { _ = client.Close() }()
 
 		_, err := client.StreamScanFile(context.Background(), "testdata/nonexistent.txt")
 		if err == nil {
@@ -607,7 +607,7 @@ func TestCustomHeaders(t *testing.T) {
 	client, _ := NewClient(srv.URL, WithHeaders(map[string]string{
 		"X-API-Key": "secret-token",
 	}))
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	_, err := client.HealthCheck(context.Background())
 	if err != nil {
@@ -627,7 +627,7 @@ func TestContextTimeout(t *testing.T) {
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL, WithHTTPClient(&http.Client{Timeout: 0}))
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 100*time.Millisecond)
 	defer cancel()
@@ -681,7 +681,7 @@ func TestConcurrentUsage(t *testing.T) {
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	ctx := context.Background()
 	errs := make(chan error, 20)
@@ -737,7 +737,7 @@ func TestScanFilePathContent(t *testing.T) {
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	result, err := client.ScanFilePath(context.Background(), tmpFile)
 	if err != nil {
@@ -765,7 +765,7 @@ func TestUnexpectedStatusCode(t *testing.T) {
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	_, err := client.ScanFile(context.Background(), []byte("data"), "test.txt")
 	if err == nil {
@@ -787,7 +787,7 @@ func TestMalformedJSONResponse(t *testing.T) {
 	defer srv.Close()
 
 	client, _ := NewClient(srv.URL)
-	defer client.Close()
+	defer func() { _ = client.Close() }()
 
 	_, err := client.Version(context.Background())
 	if err == nil {

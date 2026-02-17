@@ -83,7 +83,7 @@ func (c *Client) HealthCheck(ctx context.Context) (*HealthCheckResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	var body struct {
 		Message string `json:"message"`
@@ -109,7 +109,7 @@ func (c *Client) Version(ctx context.Context) (*VersionResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, c.handleErrorResponse(resp)
@@ -135,7 +135,7 @@ func (c *Client) ScanFilePath(ctx context.Context, filePath string) (*ScanResult
 	if err != nil {
 		return nil, NewValidationError(fmt.Sprintf("failed to open file: %s", filePath), err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return c.ScanReader(ctx, f, filepath.Base(filePath))
 }
@@ -195,7 +195,7 @@ func (c *Client) StreamScanFile(ctx context.Context, filePath string) (*ScanResu
 	if err != nil {
 		return nil, NewValidationError(fmt.Sprintf("failed to open file: %s", filePath), err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	stat, err := f.Stat()
 	if err != nil {
@@ -234,7 +234,7 @@ func (c *Client) doScan(req *http.Request) (*ScanResult, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, c.handleErrorResponse(resp)
@@ -300,18 +300,10 @@ func (c *Client) classifyTransportError(err error) error {
 		return NewTimeoutError("request timed out", err)
 	}
 
-	// Unwrap url.Error to check inner cause
+	// Unwrap url.Error for Timeout() (context errors already handled above via errors.Is)
 	var urlErr *url.Error
-	if errors.As(err, &urlErr) {
-		if urlErr.Timeout() {
-			return NewTimeoutError("request timed out", err)
-		}
-		if errors.Is(urlErr.Err, context.Canceled) {
-			return NewTimeoutError("request canceled", err)
-		}
-		if errors.Is(urlErr.Err, context.DeadlineExceeded) {
-			return NewTimeoutError("request timed out", err)
-		}
+	if errors.As(err, &urlErr) && urlErr.Timeout() {
+		return NewTimeoutError("request timed out", err)
 	}
 
 	// Network errors (connection refused, DNS, etc.)

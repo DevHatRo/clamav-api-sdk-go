@@ -18,12 +18,13 @@ import (
 // Client is the gRPC client for the ClamAV API.
 // It is safe for concurrent use from multiple goroutines.
 type Client struct {
-	conn           *grpclib.ClientConn
-	scanner        pb.ClamAVScannerClient
-	timeout        time.Duration
-	chunkSize      int
-	maxMessageSize int
-	dialOpts       []grpclib.DialOption
+	conn              *grpclib.ClientConn
+	scanner           pb.ClamAVScannerClient
+	timeout           time.Duration
+	chunkSize         int
+	maxMessageSize    int
+	dialOpts          []grpclib.DialOption
+	hasTransportCreds bool
 }
 
 // NewClient creates a gRPC client for the ClamAV API.
@@ -41,8 +42,8 @@ func NewClient(target string, opts ...ClientOption) (*Client, error) {
 		opt(c)
 	}
 
-	// Default to insecure only when user provided no dial options (e.g. no WithTransportCredentials).
-	if len(c.dialOpts) == 0 {
+	// Default to insecure only when caller did not set transport credentials (e.g. via WithTransportCredentials).
+	if !c.hasTransportCreds {
 		c.dialOpts = append(c.dialOpts, grpclib.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
@@ -199,7 +200,7 @@ func (c *Client) ScanStreamFile(ctx context.Context, filePath string) (*clamav.S
 	if err != nil {
 		return nil, clamav.NewValidationError("failed to open file: "+filePath, err)
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	return c.ScanStreamReader(ctx, f, filepath.Base(filePath))
 }
@@ -208,6 +209,7 @@ func (c *Client) ScanStreamFile(ctx context.Context, filePath string) (*clamav.S
 // Results are sent to the returned channel as they arrive.
 // The channel is closed when all results have been received.
 // Errors for individual files appear in ScanResult with Status "ERROR".
+// If the consumer stops reading from the channel, goroutines exit on ctx.Done() so resources are not leaked.
 func (c *Client) ScanMultiple(ctx context.Context, files []clamav.FileInput) (<-chan *clamav.ScanResult, error) {
 	ctx, cancel := c.contextWithTimeout(ctx)
 
@@ -217,7 +219,21 @@ func (c *Client) ScanMultiple(ctx context.Context, files []clamav.FileInput) (<-
 		return nil, mapGRPCError(err)
 	}
 
-	results := make(chan *clamav.ScanResult, len(files))
+	bufSize := 2*len(files) + 1
+	if bufSize < 1 {
+		bufSize = 1
+	}
+	results := make(chan *clamav.ScanResult, bufSize)
+
+	// sendResult sends to results or returns when ctx is done (avoids leaking if consumer stops reading).
+	sendResult := func(r *clamav.ScanResult) bool {
+		select {
+		case results <- r:
+			return true
+		case <-ctx.Done():
+			return false
+		}
+	}
 
 	// Send all files
 	go func() {
@@ -226,11 +242,18 @@ func (c *Client) ScanMultiple(ctx context.Context, files []clamav.FileInput) (<-
 		}()
 
 		for _, file := range files {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
 			if err := c.sendChunks(stream, file.Data, file.Filename); err != nil {
-				results <- &clamav.ScanResult{
+				if !sendResult(&clamav.ScanResult{
 					Status:   "ERROR",
 					Message:  err.Error(),
 					Filename: file.Filename,
+				}) {
+					return
 				}
 			}
 		}
@@ -251,13 +274,15 @@ func (c *Client) ScanMultiple(ctx context.Context, files []clamav.FileInput) (<-
 				if ok && st.Code() == codes.Canceled {
 					return
 				}
-				results <- &clamav.ScanResult{
+				sendResult(&clamav.ScanResult{
 					Status:  "ERROR",
 					Message: err.Error(),
-				}
+				})
 				return
 			}
-			results <- mapScanResponse(resp)
+			if !sendResult(mapScanResponse(resp)) {
+				return
+			}
 		}
 	}()
 

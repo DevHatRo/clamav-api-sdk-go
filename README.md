@@ -259,7 +259,7 @@ if err != nil {
 }
 
 client, err := clamavgrpc.NewClient("clamav.example.com:9000",
-    clamavgrpc.WithDialOptions(grpc.WithTransportCredentials(creds)),
+    clamavgrpc.WithTransportCredentials(creds),
     clamavgrpc.WithTimeout(60*time.Second),
     clamavgrpc.WithChunkSize(128*1024), // 128KB chunks
 )
@@ -338,7 +338,7 @@ make proto
 
 ### Project Structure
 
-```
+```text
 clamav-api-sdk-go/
 ├── client.go                # REST client implementation
 ├── client_test.go           # REST client unit tests
@@ -367,13 +367,6 @@ clamav-api-sdk-go/
 ├── .golangci.yml
 └── .github/workflows/ci.yml # CI pipeline
 ```
-
-## Versioning and releases
-
-Releases are managed by [Release Please](https://github.com/googleapis/release-please). Merge the automated release PR to create a new release.
-
-- Root module: `v1.x.x`
-- gRPC sub-module: `grpc/v1.x.x`
 
 ## License
 

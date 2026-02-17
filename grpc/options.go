@@ -4,6 +4,7 @@ import (
 	"time"
 
 	grpclib "google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 const (
@@ -19,6 +20,15 @@ type ClientOption func(*Client)
 func WithDialOptions(opts ...grpclib.DialOption) ClientOption {
 	return func(c *Client) {
 		c.dialOpts = append(c.dialOpts, opts...)
+	}
+}
+
+// WithTransportCredentials sets transport credentials (e.g. TLS).
+// When used, insecure credentials are not added by default.
+func WithTransportCredentials(creds credentials.TransportCredentials) ClientOption {
+	return func(c *Client) {
+		c.dialOpts = append(c.dialOpts, grpclib.WithTransportCredentials(creds))
+		c.hasTransportCreds = true
 	}
 }
 

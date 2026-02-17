@@ -322,7 +322,9 @@ func TestScanFilePath(t *testing.T) {
 		// Create temp file
 		tmpDir := t.TempDir()
 		tmpFile := filepath.Join(tmpDir, "test.txt")
-		os.WriteFile(tmpFile, []byte("test content"), 0644)
+		if err := os.WriteFile(tmpFile, []byte("test content"), 0644); err != nil {
+			t.Fatalf("write temp file: %v", err)
+		}
 
 		result, err := env.client.ScanFilePath(context.Background(), tmpFile)
 		if err != nil {
@@ -475,7 +477,9 @@ func TestScanStreamFile(t *testing.T) {
 
 		tmpDir := t.TempDir()
 		tmpFile := filepath.Join(tmpDir, "streamfile.txt")
-		os.WriteFile(tmpFile, []byte("file content for streaming"), 0644)
+		if err := os.WriteFile(tmpFile, []byte("file content for streaming"), 0644); err != nil {
+			t.Fatalf("write temp file: %v", err)
+		}
 
 		result, err := env.client.ScanStreamFile(context.Background(), tmpFile)
 		if err != nil {
