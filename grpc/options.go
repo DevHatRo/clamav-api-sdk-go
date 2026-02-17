@@ -9,7 +9,7 @@ import (
 
 const (
 	defaultTimeout        = 30 * time.Second
-	defaultChunkSize      = 64 * 1024       // 64KB
+	defaultChunkSize      = 64 * 1024         // 64KB
 	defaultMaxMessageSize = 200 * 1024 * 1024 // 200MB
 )
 

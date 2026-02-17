@@ -159,7 +159,7 @@ func newTestEnv(t *testing.T, mock *mockClamAVServer) *testEnv {
 	pb.RegisterClamAVScannerServer(srv, mock)
 
 	go func() {
-		srv.Serve(lis) //nolint:errcheck
+		srv.Serve(lis) //nolint:errcheck // test server; stopped via GracefulStop
 	}()
 
 	conn, err := grpclib.NewClient("passthrough:///bufconn",
@@ -191,8 +191,8 @@ func newTestEnv(t *testing.T, mock *mockClamAVServer) *testEnv {
 
 func (e *testEnv) close() {
 	e.grpcSrv.GracefulStop()
-	e.grpcConn.Close()
-	e.lis.Close()
+	_ = e.grpcConn.Close()
+	_ = e.lis.Close()
 }
 
 // --- HealthCheck tests ---
@@ -322,7 +322,7 @@ func TestScanFilePath(t *testing.T) {
 		// Create temp file
 		tmpDir := t.TempDir()
 		tmpFile := filepath.Join(tmpDir, "test.txt")
-		if err := os.WriteFile(tmpFile, []byte("test content"), 0644); err != nil {
+		if err := os.WriteFile(tmpFile, []byte("test content"), 0o644); err != nil {
 			t.Fatalf("write temp file: %v", err)
 		}
 
@@ -477,7 +477,7 @@ func TestScanStreamFile(t *testing.T) {
 
 		tmpDir := t.TempDir()
 		tmpFile := filepath.Join(tmpDir, "streamfile.txt")
-		if err := os.WriteFile(tmpFile, []byte("file content for streaming"), 0644); err != nil {
+		if err := os.WriteFile(tmpFile, []byte("file content for streaming"), 0o644); err != nil {
 			t.Fatalf("write temp file: %v", err)
 		}
 
@@ -673,10 +673,10 @@ func TestContextCancellation(t *testing.T) {
 
 func TestMapGRPCError(t *testing.T) {
 	tests := []struct {
-		name   string
-		code   codes.Code
-		check  func(error) bool
-		label  string
+		name  string
+		code  codes.Code
+		check func(error) bool
+		label string
 	}{
 		{"InvalidArgument", codes.InvalidArgument, clamav.IsValidationError, "validation"},
 		{"Internal", codes.Internal, clamav.IsServiceError, "service"},

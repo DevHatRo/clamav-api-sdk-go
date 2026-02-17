@@ -241,7 +241,7 @@ func (c *Client) ScanMultiple(ctx context.Context, files []clamav.FileInput) (<-
 	// Send all files
 	go func() {
 		defer func() {
-			stream.CloseSend() //nolint:errcheck
+			stream.CloseSend() //nolint:errcheck // best-effort on send side close
 		}()
 
 		for _, file := range files {
