@@ -1,0 +1,31 @@
+# ClamAV API service for local development and integration tests.
+# Image: ghcr.io/devhatro/clamav-api (use :latest or pin a version tag for reproducibility).
+services:
+  clamav-api:
+    image: ghcr.io/devhatro/clamav-api:latest
+    restart: unless-stopped
+    ports:
+      - "6000:6000"
+      - "9000:9000"
+    environment:
+      - GIN_MODE=release
+      - CLAMAV_DEBUG=false
+      - CLAMAV_SOCKET=/var/run/clamav/clamd.ctl
+      - CLAMAV_MAX_SIZE=209715200
+      - CLAMAV_HOST=0.0.0.0
+      - CLAMAV_PORT=6000
+      - CLAMAV_GRPC_PORT=9000
+      - CLAMAV_ENABLE_GRPC=true
+    volumes:
+      - clamav-data:/var/lib/clamav
+      - clamav-socket:/var/run/clamav
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:6000/api/health-check"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 120s
+
+volumes:
+  clamav-data:
+  clamav-socket:

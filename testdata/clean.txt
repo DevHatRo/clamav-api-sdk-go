@@ -1,0 +1,2 @@
+This is a clean test file with no malicious content.
+It is used for testing the ClamAV scanning SDK.

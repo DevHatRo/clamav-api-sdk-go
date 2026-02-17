@@ -1,0 +1,30 @@
+name: Release Please
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Release Please
+        id: release-please
+        uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Create GitHub Release
+        if: steps.release-please.outputs.release_created == 'true'
+        run: echo "Release created"

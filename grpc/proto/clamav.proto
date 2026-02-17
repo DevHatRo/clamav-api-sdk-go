@@ -1,0 +1,50 @@
+syntax = "proto3";
+
+package clamav;
+
+option go_package = "github.com/DevHatRo/clamav-api-sdk-go/grpc/proto;proto";
+
+// ClamAVScanner is the gRPC scanning service.
+service ClamAVScanner {
+  // HealthCheck checks the ClamAV service health.
+  rpc HealthCheck(HealthCheckRequest) returns (HealthCheckResponse);
+
+  // ScanFile scans a file with a unary request.
+  rpc ScanFile(ScanFileRequest) returns (ScanResponse);
+
+  // ScanStream scans with client streaming (for large files).
+  rpc ScanStream(stream ScanStreamRequest) returns (ScanResponse);
+
+  // ScanMultiple scans with bidirectional streaming (for multiple files).
+  rpc ScanMultiple(stream ScanStreamRequest) returns (stream ScanResponse);
+}
+
+// HealthCheckRequest is an empty request for health checking.
+message HealthCheckRequest {}
+
+// HealthCheckResponse contains the health status.
+message HealthCheckResponse {
+  string status = 1;
+  string message = 2;
+}
+
+// ScanFileRequest contains file data for a unary scan.
+message ScanFileRequest {
+  bytes data = 1;
+  string filename = 2;
+}
+
+// ScanStreamRequest contains a chunk of file data for streaming scans.
+message ScanStreamRequest {
+  bytes chunk = 1;
+  string filename = 2;
+  bool is_last = 3;
+}
+
+// ScanResponse contains the scan result.
+message ScanResponse {
+  string status = 1;
+  string message = 2;
+  double scan_time = 3;
+  string filename = 4;
+}
