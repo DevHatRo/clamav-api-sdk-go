@@ -375,7 +375,7 @@ func mapGRPCError(err error) error {
 	case codes.InvalidArgument:
 		return clamav.NewValidationError(st.Message(), err)
 	case codes.Internal:
-		return clamav.NewServiceError(st.Message(), int(st.Code()), err)
+		return clamav.NewServiceError(st.Message(), 500, err)
 	case codes.DeadlineExceeded:
 		return clamav.NewTimeoutError(st.Message(), err)
 	case codes.Canceled:
@@ -383,6 +383,39 @@ func mapGRPCError(err error) error {
 	case codes.Unavailable:
 		return clamav.NewConnectionError(st.Message(), err)
 	default:
-		return clamav.NewServiceError(st.Message(), int(st.Code()), err)
+		return clamav.NewServiceError(st.Message(), grpcCodeToHTTP(st.Code()), err)
+	}
+}
+
+// grpcCodeToHTTP maps gRPC status codes to HTTP-equivalent status codes
+// so that StatusCode is consistent between the REST and gRPC clients.
+func grpcCodeToHTTP(c codes.Code) int {
+	switch c {
+	case codes.OK:
+		return 200
+	case codes.InvalidArgument:
+		return 400
+	case codes.Unauthenticated:
+		return 401
+	case codes.PermissionDenied:
+		return 403
+	case codes.NotFound:
+		return 404
+	case codes.AlreadyExists:
+		return 409
+	case codes.ResourceExhausted:
+		return 429
+	case codes.Canceled:
+		return 499
+	case codes.Internal, codes.DataLoss, codes.Unknown:
+		return 500
+	case codes.Unimplemented:
+		return 501
+	case codes.Unavailable:
+		return 503
+	case codes.DeadlineExceeded:
+		return 504
+	default:
+		return 500
 	}
 }

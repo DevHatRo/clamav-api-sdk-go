@@ -29,7 +29,7 @@ func integrationRESTClient(t *testing.T) *Client {
 	if err != nil {
 		t.Fatalf("failed to create REST client: %v", err)
 	}
-	t.Cleanup(func() { client.Close() })
+	t.Cleanup(func() { _ = client.Close() })
 	return client
 }
 

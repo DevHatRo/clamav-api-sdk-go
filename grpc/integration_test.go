@@ -27,7 +27,7 @@ func integrationGRPCClient(t *testing.T) *Client {
 	if err != nil {
 		t.Fatalf("failed to create gRPC client: %v", err)
 	}
-	t.Cleanup(func() { client.Close() })
+	t.Cleanup(func() { _ = client.Close() })
 	return client
 }
 
