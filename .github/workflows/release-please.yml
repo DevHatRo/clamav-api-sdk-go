@@ -26,5 +26,5 @@ jobs:
           manifest-file: .release-please-manifest.json
 
       - name: Create GitHub Release
-        if: ${{ steps.release-please.outputs.release_created }}
-        run: echo "Release created: ${{ steps.release-please.outputs.major }}.${{ steps.release-please.outputs.minor }}.${{ steps.release-please.outputs.patch }}"
+        if: steps.release-please.outputs.release_created == 'true'
+        run: echo "Release created"

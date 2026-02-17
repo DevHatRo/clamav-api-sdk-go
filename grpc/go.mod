@@ -1,6 +1,6 @@
 module github.com/DevHatRo/clamav-api-sdk-go/grpc
 
-go 1.26
+go 1.22
 
 require (
 	github.com/DevHatRo/clamav-api-sdk-go v0.0.0-00010101000000-000000000000
