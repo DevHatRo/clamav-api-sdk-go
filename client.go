@@ -125,6 +125,7 @@ func (c *Client) Version(ctx context.Context) (*VersionResult, error) {
 
 // ScanFile scans file data provided as a byte slice via multipart upload.
 // filename is optional metadata sent with the multipart upload.
+// For large or unbounded payloads, use StreamScan to avoid buffering the entire body in memory.
 func (c *Client) ScanFile(ctx context.Context, data []byte, filename string) (*ScanResult, error) {
 	return c.ScanReader(ctx, bytes.NewReader(data), filename)
 }
@@ -141,6 +142,8 @@ func (c *Client) ScanFilePath(ctx context.Context, filePath string) (*ScanResult
 }
 
 // ScanReader scans data from an io.Reader via multipart upload.
+// The entire body is buffered in memory to build the multipart payload; for large files
+// or unbounded streams use StreamScan instead to avoid high memory use.
 func (c *Client) ScanReader(ctx context.Context, r io.Reader, filename string) (*ScanResult, error) {
 	if filename == "" {
 		filename = "file"

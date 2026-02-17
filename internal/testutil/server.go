@@ -8,12 +8,6 @@ import (
 	"net/http/httptest"
 )
 
-// MockResponse defines a canned response for the mock server.
-type MockResponse struct {
-	StatusCode int
-	Body       interface{}
-}
-
 // NewMockServer creates an httptest.Server that handles ClamAV API endpoints.
 // The handlers map allows overriding behavior per endpoint path.
 func NewMockServer(handlers map[string]http.HandlerFunc) *httptest.Server {
@@ -29,7 +23,7 @@ func JSONHandler(statusCode int, body interface{}) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(body) //nolint:errcheck
+		json.NewEncoder(w).Encode(body) //nolint:errcheck // mock response; write errors are not actionable
 	}
 }
 
@@ -47,7 +41,7 @@ func ScanHandler(checkFunc func(data []byte, filename string) (int, interface{})
 			data, err = io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(map[string]string{"message": "failed to read body"}) //nolint:errcheck
+				json.NewEncoder(w).Encode(map[string]string{"message": "failed to read body"}) //nolint:errcheck // mock error response
 				return
 			}
 			filename = "stream"
@@ -56,7 +50,7 @@ func ScanHandler(checkFunc func(data []byte, filename string) (int, interface{})
 			file, header, err := r.FormFile("file")
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				json.NewEncoder(w).Encode(map[string]string{"message": "Provide a single file"}) //nolint:errcheck
+				json.NewEncoder(w).Encode(map[string]string{"message": "Provide a single file"}) //nolint:errcheck // mock validation error response
 				return
 			}
 			defer func() { _ = file.Close() }()
@@ -72,7 +66,7 @@ func ScanHandler(checkFunc func(data []byte, filename string) (int, interface{})
 		statusCode, body := checkFunc(data, filename)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(statusCode)
-		json.NewEncoder(w).Encode(body) //nolint:errcheck
+		json.NewEncoder(w).Encode(body) //nolint:errcheck // mock response; write errors are not actionable
 	}
 }
 

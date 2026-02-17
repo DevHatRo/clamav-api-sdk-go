@@ -714,7 +714,6 @@ func TestMapGRPCError(t *testing.T) {
 
 func TestClientOptions(t *testing.T) {
 	t.Run("custom chunk size", func(t *testing.T) {
-		var chunkCount int
 		env := newTestEnv(t, &mockClamAVServer{
 			scanFunc: func(data []byte, filename string) (*pb.ScanResponse, error) {
 				return &pb.ScanResponse{Status: "OK", Filename: filename}, nil
@@ -722,11 +721,7 @@ func TestClientOptions(t *testing.T) {
 		})
 		defer env.close()
 
-		// Override with small chunk size
 		env.client.chunkSize = 5
-
-		// Intercept via scan func to count chunks won't work here since
-		// the mock receives assembled data. Instead just verify it works.
 		data := bytes.Repeat([]byte("X"), 23)
 		result, err := env.client.ScanStream(context.Background(), data, "chunked.txt")
 		if err != nil {
@@ -735,7 +730,6 @@ func TestClientOptions(t *testing.T) {
 		if !result.IsClean() {
 			t.Errorf("expected clean result")
 		}
-		_ = chunkCount
 	})
 
 	t.Run("WithTimeout option", func(t *testing.T) {

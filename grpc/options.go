@@ -34,9 +34,12 @@ func WithTransportCredentials(creds credentials.TransportCredentials) ClientOpti
 
 // WithTimeout sets the default RPC timeout.
 // If a context with a shorter deadline is provided to a method, that deadline takes precedence.
+// Non-positive durations are ignored (no-op).
 func WithTimeout(d time.Duration) ClientOption {
 	return func(c *Client) {
-		c.timeout = d
+		if d > 0 {
+			c.timeout = d
+		}
 	}
 }
 

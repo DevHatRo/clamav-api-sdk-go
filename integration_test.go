@@ -11,6 +11,9 @@ import (
 	"time"
 )
 
+// eicarTestData is the standard EICAR test virus signature for integration tests.
+var eicarTestData = []byte(`X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`)
+
 func integrationRESTURL(t *testing.T) string {
 	t.Helper()
 	url := os.Getenv("CLAMAV_REST_URL")
@@ -77,16 +80,15 @@ func TestIntegrationScanEicar(t *testing.T) {
 	client := integrationRESTClient(t)
 	ctx := context.Background()
 
-	eicar := []byte(`X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`)
-	result, err := client.ScanFile(ctx, eicar, "eicar.txt")
+	result, err := client.ScanFile(ctx, eicarTestData, "eicar.txt")
 	if err != nil {
 		t.Fatalf("ScanFile error: %v", err)
 	}
 	if !result.IsInfected() {
 		t.Errorf("expected infected, got status %q", result.Status)
 	}
-	if !strings.Contains(result.Message, "Eicar") {
-		t.Errorf("expected Eicar in message, got %q", result.Message)
+	if !strings.Contains(strings.ToLower(result.Message), "eicar") {
+		t.Errorf("expected eicar (case-insensitive) in message, got %q", result.Message)
 	}
 	t.Logf("Scan result: status=%s, message=%s, time=%.4fs", result.Status, result.Message, result.ScanTime)
 }
@@ -137,8 +139,7 @@ func TestIntegrationStreamScanEicar(t *testing.T) {
 	client := integrationRESTClient(t)
 	ctx := context.Background()
 
-	eicar := []byte(`X5O!P%@AP[4\PZX54(P^)7CC)7}$EICAR-STANDARD-ANTIVIRUS-TEST-FILE!$H+H*`)
-	result, err := client.StreamScan(ctx, bytes.NewReader(eicar), int64(len(eicar)))
+	result, err := client.StreamScan(ctx, bytes.NewReader(eicarTestData), int64(len(eicarTestData)))
 	if err != nil {
 		t.Fatalf("StreamScan error: %v", err)
 	}

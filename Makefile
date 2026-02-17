@@ -17,6 +17,7 @@ proto:
 
 coverage:
 	go tool cover -html=coverage.out -o coverage.html
+	go tool cover -html=grpc/coverage.out -o grpc/coverage.html
 
 clean:
 	rm -f coverage.out coverage.html

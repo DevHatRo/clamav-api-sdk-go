@@ -91,6 +91,9 @@ func (c *Client) HealthCheck(ctx context.Context) (*clamav.HealthCheckResult, er
 
 // ScanFile scans file data with a unary RPC call.
 func (c *Client) ScanFile(ctx context.Context, data []byte, filename string) (*clamav.ScanResult, error) {
+	if len(data) == 0 {
+		return nil, mapGRPCError(status.Error(codes.InvalidArgument, "file data is required"))
+	}
 	ctx, cancel := c.contextWithTimeout(ctx)
 	defer cancel()
 

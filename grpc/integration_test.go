@@ -70,8 +70,8 @@ func TestIntegrationGRPCScanFile(t *testing.T) {
 		if !result.IsInfected() {
 			t.Errorf("expected infected, got status %q", result.Status)
 		}
-		if !strings.Contains(result.Message, "Eicar") {
-			t.Errorf("expected Eicar in message, got %q", result.Message)
+		if !strings.Contains(strings.ToLower(result.Message), "eicar") {
+			t.Errorf("expected eicar (case-insensitive) in message, got %q", result.Message)
 		}
 		t.Logf("ScanFile result: status=%s, message=%s", result.Status, result.Message)
 	})
