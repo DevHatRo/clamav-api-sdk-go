@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: golangci-lint (root)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: .
+
+      - name: golangci-lint (grpc)
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          working-directory: ./grpc
+
+  unit-test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Test root module
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+
+      - name: Test gRPC module
+        run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
+        working-directory: ./grpc
+
+      - name: Upload coverage (root)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-root
+          path: coverage.out
+
+      - name: Upload coverage (grpc)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-grpc
+          path: grpc/coverage.out
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      clamav-api:
+        image: ghcr.io/devhatro/clamav-api:latest
+        ports:
+          - 6000:6000
+          - 9000:9000
+        env:
+          GIN_MODE: release
+          CLAMAV_DEBUG: "false"
+          CLAMAV_SOCKET: /var/run/clamav/clamd.ctl
+          CLAMAV_MAX_SIZE: "209715200"
+          CLAMAV_HOST: 0.0.0.0
+          CLAMAV_PORT: "6000"
+          CLAMAV_GRPC_PORT: "9000"
+          CLAMAV_ENABLE_GRPC: "true"
+        options: >-
+          --health-cmd "wget --spider -q http://localhost:6000/api/health-check || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 30
+          --health-start-period 120s
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Wait for ClamAV API to be ready
+        run: |
+          echo "Waiting for ClamAV API..."
+          for i in $(seq 1 60); do
+            if curl -sf http://localhost:6000/api/health-check > /dev/null 2>&1; then
+              echo "ClamAV API is ready!"
+              break
+            fi
+            echo "Attempt $i/60 - waiting 5s..."
+            sleep 5
+          done
+          curl -sf http://localhost:6000/api/health-check || (echo "ClamAV API not ready" && exit 1)
+
+      - name: Integration tests (root)
+        run: go test -race -tags=integration -v -timeout 300s ./...
+        env:
+          CLAMAV_REST_URL: http://localhost:6000
+
+      - name: Integration tests (grpc)
+        run: go test -race -tags=integration -v -timeout 300s ./...
+        working-directory: ./grpc
+        env:
+          CLAMAV_GRPC_ADDR: localhost:9000
