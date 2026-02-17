@@ -293,10 +293,10 @@ func (c *Client) classifyTransportError(err error) error {
 	}
 
 	// Context cancellation or deadline exceeded
-	if ctx := context.Canceled; err == ctx {
+	if errors.Is(err, context.Canceled) {
 		return NewTimeoutError("request canceled", err)
 	}
-	if ctx := context.DeadlineExceeded; err == ctx {
+	if errors.Is(err, context.DeadlineExceeded) {
 		return NewTimeoutError("request timed out", err)
 	}
 

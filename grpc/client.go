@@ -41,12 +41,8 @@ func NewClient(target string, opts ...ClientOption) (*Client, error) {
 		opt(c)
 	}
 
-	// Default to insecure if no transport credentials provided
-	hasCredentials := false
-	for _, opt := range c.dialOpts {
-		_ = opt
-	}
-	if !hasCredentials {
+	// Default to insecure only when user provided no dial options (e.g. no WithTransportCredentials).
+	if len(c.dialOpts) == 0 {
 		c.dialOpts = append(c.dialOpts, grpclib.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
