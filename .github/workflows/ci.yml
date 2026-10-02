@@ -14,20 +14,20 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.24"
+          go-version: "1.27"
 
       - name: golangci-lint (root)
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: .
 
       - name: golangci-lint (grpc)
-        uses: golangci/golangci-lint-action@v6
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
           working-directory: ./grpc
@@ -36,11 +36,11 @@ jobs:
     name: Unit Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.24"
+          go-version: "1.27"
 
       - name: Test root module
         run: go test -race -coverprofile=coverage.out -covermode=atomic ./...
@@ -50,13 +50,13 @@ jobs:
         working-directory: ./grpc
 
       - name: Upload coverage (root)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-root
           path: coverage.out
 
       - name: Upload coverage (grpc)
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-grpc
           path: grpc/coverage.out
@@ -87,11 +87,11 @@ jobs:
           --health-start-period 120s
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
-          go-version: "1.24"
+          go-version: "1.27"
 
       - name: Wait for ClamAV API to be ready
         run: |

@@ -1,3 +1,3 @@
 module github.com/DevHatRo/clamav-api-sdk-go
 
-go 1.22
+go 1.27
