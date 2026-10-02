@@ -300,7 +300,7 @@ client, err := clamavgrpc.NewClient("clamav.example.com:9000",
 
 ### Prerequisites
 
-- Go 1.22+
+- Go 1.27+
 - Docker (for integration tests)
 - protoc + protoc-gen-go + protoc-gen-go-grpc (for proto regeneration only)
 
